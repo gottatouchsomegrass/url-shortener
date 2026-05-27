@@ -1,4 +1,4 @@
-//Package database opens db conn
+// Package database opens db conn
 package database
 
 import (
@@ -12,20 +12,20 @@ type Queries struct {
 func OpenDBConnection() (*Queries, error) {
 	//postgres conn
 	db, err := PostgreSQLConnection()
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
 	//redis conn
 	rdb, err := RedisConnection()
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
 	return &Queries{
 		URLQuery: &queries.URLQuery{
-			DB : db,
-			RDB : rdb,
+			DB:  db,
+			RDB: rdb,
 		},
-	},nil
+	}, nil
 }

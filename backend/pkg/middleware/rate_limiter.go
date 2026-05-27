@@ -1,4 +1,4 @@
-//Package middleware manages middleware of the routes
+// Package middleware manages middleware of the routes
 package middleware
 
 import (
@@ -9,28 +9,28 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-//RateLimiter : fixed window rate limiter
+// RateLimiter : fixed window rate limiter
 func RateLimiter(rdb *redis.Client, limit int, window time.Duration) gin.HandlerFunc {
-	return func(c *gin.Context){
+	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		ip := c.ClientIP()
-		key := "rate_limit:"+ip+":"+c.FullPath()
+		key := "rate_limit:" + ip + ":" + c.FullPath()
 
-		counter,err := rdb.Incr(
+		counter, err := rdb.Incr(
 			ctx,
 			key,
 		).Result()
-		if err!=nil {
+		if err != nil {
 			c.JSON(
 				http.StatusInternalServerError,
 				gin.H{
-					"error" : "rate limit error Incr",
+					"error": "rate limit error Incr",
 				},
 			)
 			c.Abort()
 			return
 		}
-		
+
 		if counter == 1 {
 			err = rdb.Expire(
 				ctx,
@@ -38,11 +38,11 @@ func RateLimiter(rdb *redis.Client, limit int, window time.Duration) gin.Handler
 				window,
 			).Err()
 
-			if err!=nil {
+			if err != nil {
 				c.JSON(
-				http.StatusInternalServerError,
+					http.StatusInternalServerError,
 					gin.H{
-						"error" : "rate limit error Expire",
+						"error": "rate limit error Expire",
 					},
 				)
 				c.Abort()
@@ -54,12 +54,12 @@ func RateLimiter(rdb *redis.Client, limit int, window time.Duration) gin.Handler
 			c.JSON(
 				http.StatusTooManyRequests,
 				gin.H{
-					"error" : "rate limit exceeded",
+					"error": "rate limit exceeded",
 				},
 			)
 			c.Abort()
 			return
 		}
 		c.Next()
-	}	
+	}
 }

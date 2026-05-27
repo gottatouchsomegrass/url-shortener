@@ -1,17 +1,23 @@
-# macOS
-**/.DS_Store
+# Environment files
+.env
+.env.test
 
-# IDEs
+# Temporary files
+tmp/
+.air/
+
+# Binaries
+*.exe
+*.out
+*.test
+
+# Build output
+dist/
+build/
+
+# IDE
 .vscode/
 .idea/
 
-# Dev build
-build/
-tmp/
-
-# Test
-*.out
-
-# Environment variables
-.env
-.env.test
+# OS
+.DS_Store

@@ -1,4 +1,4 @@
-//Package configs contains all project configs
+// Package configs contains all project configs
 package configs
 
 import (
@@ -13,18 +13,18 @@ import (
 func ConfigHTTPServer(r *gin.Engine) *http.Server {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port="8080"
+		port = "8080"
 	}
 	timeout, err := strconv.Atoi(os.Getenv("SERVER_READ_TIMEOUT"))
-	if err!=nil || timeout<=0 {
+	if err != nil || timeout <= 0 {
 		timeout = 5
 	}
 
 	return &http.Server{
-		Addr:			":"+port,
-		Handler:		r,
-		ReadTimeout: 	time.Duration(timeout) * time.Second,
-		WriteTimeout:	5 * time.Second,
-		IdleTimeout:	60 * time.Second,
+		Addr:         ":" + port,
+		Handler:      r,
+		ReadTimeout:  time.Duration(timeout) * time.Second,
+		WriteTimeout: 5 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 }

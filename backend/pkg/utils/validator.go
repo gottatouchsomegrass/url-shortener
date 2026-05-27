@@ -8,23 +8,23 @@ import (
 
 var Validate *validator.Validate
 
-func InitValidator()  {
+func InitValidator() {
 	Validate = validator.New()
 
 	Validate.RegisterValidation("shortcode", customCodeValidator)
 }
 
-//customCodeValidator validator rules
+// customCodeValidator validator rules
 func customCodeValidator(f validator.FieldLevel) bool {
 	code := f.Field().String()
-	match, _ := regexp.MatchString(`^[a-zA-Z0-9_-]{4,20}$`,code)
+	match, _ := regexp.MatchString(`^[a-zA-Z0-9_-]{4,20}$`, code)
 	return match
 }
 
 func ValidateErrors(err error) map[string]string {
 	fields := map[string]string{}
 
-	for _,e := range err.(validator.ValidationErrors) {
+	for _, e := range err.(validator.ValidationErrors) {
 		switch e.Tag() {
 		case "required":
 			fields[e.Field()] = "is required"

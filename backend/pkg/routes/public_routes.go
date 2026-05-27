@@ -1,4 +1,4 @@
-//Package routes include all the routes
+// Package routes include all the routes
 package routes
 
 import (

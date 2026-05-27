@@ -10,19 +10,19 @@ import (
 	"time"
 )
 
-//StartSvrGracefulShutdown starts the server with graceful shutdown
-func StartSvrGracefulShutdown(srv *http.Server)  {
-	
+// StartSvrGracefulShutdown starts the server with graceful shutdown
+func StartSvrGracefulShutdown(srv *http.Server) {
+
 	//running server in bg
-	go func () {
+	go func() {
 		log.Println("Svr running at", srv.Addr)
-		if err := srv.ListenAndServe(); err!=nil {
-			log.Fatalf("Listen&Serve error: %v\n",err)
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatalf("Listen&Serve error: %v\n", err)
 		}
 	}()
-	
+
 	//catch interruptions
-	quit := make(chan os.Signal,1)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting this server down...")
@@ -30,7 +30,7 @@ func StartSvrGracefulShutdown(srv *http.Server)  {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err!=nil {
+	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Forced svr shutdown: %v\n", err)
 	}
 	log.Println("Svr exiting")
