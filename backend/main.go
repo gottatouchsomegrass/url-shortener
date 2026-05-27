@@ -13,6 +13,8 @@ import (
 )
 
 func main() {
+	utils.InitValidator()
+
 	if err := godotenv.Load(".env.test"); err != nil {
 		log.Fatal("error loading .env file")
 	}

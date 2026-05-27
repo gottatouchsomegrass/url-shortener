@@ -16,8 +16,8 @@ type URLController struct {
 }
 
 type Request struct {
-	LongURL    string `json:"long_url" validate:"required,url"`
-	CustomCode string `json:"custom_code,omitempty" validate:"omitempty,shortcode"`
+	LongURL    string `json:"long_url" binding:"required,url"`
+	CustomCode string `json:"custom_code,omitempty" binding:"omitempty,shortcode"`
 }
 
 func NewURLController(q *queries.URLQuery) *URLController {
@@ -31,7 +31,7 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{
-			"error": "invalid req body",
+			"error": utils.ValidateErrors(err),
 		})
 		return
 	}
@@ -41,7 +41,31 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 	expiry := time.Now().Add(
 		24 * time.Hour,
 	)
-	shortened := utils.GenerateShortCode()
+
+	shortened := req.CustomCode
+	if shortened=="" {
+		shortened=utils.GenerateShortCode()
+	}
+
+	exists, err := uc.Query.CustomCodeExists(
+		ctx,
+		shortened,
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "failed checking shortcode",
+		})
+		return
+	}
+
+	if exists {
+		c.JSON(400, gin.H{
+			"error": "custom code already exists",
+		})
+		return
+	}
+
 
 	newURL := models.URL{
 		LongURL:   req.LongURL,
@@ -51,7 +75,7 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 
-	err := uc.Query.CreateURL(ctx, &newURL)
+	err = uc.Query.CreateURL(ctx, &newURL)
 	if err != nil {
 		fmt.Println("query err shorten: \n", err)
 		c.JSON(500, gin.H{

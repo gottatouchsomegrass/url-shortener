@@ -3,15 +3,19 @@ package utils
 import (
 	"regexp"
 
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
-var Validate *validator.Validate
+//errors
 
 func InitValidator() {
-	Validate = validator.New()
-
-	Validate.RegisterValidation("shortcode", customCodeValidator)
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation(
+			"shortcode",
+			customCodeValidator,
+		)
+	}
 }
 
 // customCodeValidator validator rules

@@ -54,5 +54,6 @@ func PostgreSQLConnection() (*pgxpool.Pool, error) {
 	}
 
 	log.Println("db connection successful")
+	log.Println(os.Getenv("DB_SERVER_URL"))
 	return db, nil
 }
