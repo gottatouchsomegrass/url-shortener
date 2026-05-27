@@ -34,6 +34,7 @@ func (q *UrlQuery) CreateUrl(ctx context.Context, url *models.URL) error {
 
 //get by short url from db
 func (q *UrlQuery) GetByShortUrl(ctx context.Context, code string) (*models.URL, error) {
+	//cache-aside implementation
 	cached, err := q.RDB.Get(ctx,code).Result()
 	if err==nil{
 		return &models.URL{
