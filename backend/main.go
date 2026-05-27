@@ -2,12 +2,10 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/controllers"
 	"github.com/gottatouchsomegrass/url/pkg/configs"
-	"github.com/gottatouchsomegrass/url/pkg/middleware"
 	"github.com/gottatouchsomegrass/url/pkg/routes"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 	"github.com/gottatouchsomegrass/url/platform/database"
@@ -26,17 +24,17 @@ import (
 		 log.Fatal(err)
 	 }
 
-	 r.Use(
-		 middleware.RateLimiter(
-			dbq.RDB,
-			100,
-			time.Minute,
-		 ),
-	 )
+	 // r.Use(
+	 //  middleware.RateLimiter(
+	 // 	dbq.RDB,
+	 // 	100,
+	 // 	time.Minute,
+	 //  ),
+	 // )
 
 
 	 urlController := controllers.NewURLController(
-		 dbq.UrlQuery,
+		 dbq.URLQuery,
 	 )
 
 	 api := r.Group("/api/v1")

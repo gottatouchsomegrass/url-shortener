@@ -1,3 +1,4 @@
+// Package controllers handles HTTP request logic
 package controllers
 
 import (
@@ -11,7 +12,7 @@ import (
 )
 
 type URLController struct {
-	Query *queries.UrlQuery
+	Query *queries.URLQuery
 }
 
 type Request struct {
@@ -19,7 +20,7 @@ type Request struct {
 	CustomCode string `json:"custom_code,omitempty" validate:"omitempty,shortcode"`
 }
 
-func NewURLController(q *queries.UrlQuery) *URLController {
+func NewURLController(q *queries.URLQuery) *URLController {
 	return &URLController{Query : q}
 }
 
@@ -42,7 +43,7 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 	)
 	shortened := utils.GenerateShortCode()
 
-	newUrl := models.URL{
+	newURL := models.URL{
 		LongURL: req.LongURL,
 		ShortURL: shortened,
 		Expiry: &expiry,
@@ -50,7 +51,7 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 
-	err := uc.Query.CreateUrl(ctx, &newUrl)
+	err := uc.Query.CreateURL(ctx, &newURL)
 	if err!=nil {
 		fmt.Println("query err shorten: \n",err)
 		c.JSON(500, gin.H{
@@ -63,12 +64,12 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 	})
 }
 
-func (uc *URLController) RedirectUrl(c *gin.Context) {
+func (uc *URLController) RedirectURL(c *gin.Context) {
 	ctx := c.Request.Context()
 	
 	code := c.Param("shortCode")
 
-	Url,err := uc.Query.GetByShortUrl(ctx,code)
+	URL,err := uc.Query.GetByShortURL(ctx,code)
 	if err!=nil {
 		fmt.Println("error shortcode: \n",err)
 		c.JSON(500,gin.H{
@@ -77,19 +78,19 @@ func (uc *URLController) RedirectUrl(c *gin.Context) {
 		return
 	}
 
-	if Url==nil {
+	if URL==nil {
 		c.JSON(404,gin.H{
 			"err" : "not found",
 		})
 		return
 	}
 
-	if Url.Expiry!=nil && time.Now().After(*Url.Expiry) {
+	if URL.Expiry!=nil && time.Now().After(*URL.Expiry) {
 		c.JSON(410, gin.H{
 			"err" : "link expired",
 		})
 		return
 	}
 
-	c.Redirect(302,Url.LongURL)
+	c.Redirect(302,URL.LongURL)
 }

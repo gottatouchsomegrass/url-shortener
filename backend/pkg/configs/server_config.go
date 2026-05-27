@@ -1,3 +1,4 @@
+//Package configs contains all project configs
 package configs
 
 import (

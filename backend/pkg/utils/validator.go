@@ -14,7 +14,7 @@ func InitValidator()  {
 	Validate.RegisterValidation("shortcode", customCodeValidator)
 }
 
-//validator rules
+//customCodeValidator validator rules
 func customCodeValidator(f validator.FieldLevel) bool {
 	code := f.Field().String()
 	match, _ := regexp.MatchString(`^[a-zA-Z0-9_-]{4,20}$`,code)

@@ -1,3 +1,4 @@
+//Package queries have caching and db layer
 package queries
 
 import (
@@ -12,13 +13,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type UrlQuery struct {
+type URLQuery struct {
 	DB	*pgxpool.Pool
 	RDB	*redis.Client
 }
 
-//insert url to db
-func (q *UrlQuery) CreateUrl(ctx context.Context, url *models.URL) error {
+//CreateURL insert url to db
+func (q *URLQuery) CreateURL(ctx context.Context, url *models.URL) error {
 	query := `
 		INSERT INTO urls (short_url, long_url, expiry)
 		VALUES ($1,$2,$3)
@@ -32,8 +33,8 @@ func (q *UrlQuery) CreateUrl(ctx context.Context, url *models.URL) error {
 	return err
 }
 
-//get by short url from db
-func (q *UrlQuery) GetByShortUrl(ctx context.Context, code string) (*models.URL, error) {
+//GetByShortURL get by short url from db
+func (q *URLQuery) GetByShortURL(ctx context.Context, code string) (*models.URL, error) {
 	//cache-aside implementation
 	cached, err := q.RDB.Get(ctx,code).Result()
 	if err==nil{
@@ -96,8 +97,8 @@ func (q *UrlQuery) GetByShortUrl(ctx context.Context, code string) (*models.URL,
 	return &url,nil
 }
 
-//check whether customcode exists or not
-func (q *UrlQuery) CustomCodeExists(ctx context.Context, code string) (bool, error) {
+//CustomCodeExists check whether customcode exists or not
+func (q *URLQuery) CustomCodeExists(ctx context.Context, code string) (bool, error) {
 	// _, err := q.RDB.Get(ctx,code).Result()
 	// if err==nil {
 	// 	return true, nil

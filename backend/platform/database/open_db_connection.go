@@ -1,3 +1,4 @@
+//Package database opens db conn
 package database
 
 import (
@@ -5,7 +6,7 @@ import (
 )
 
 type Queries struct {
-	*queries.UrlQuery
+	*queries.URLQuery
 }
 
 func OpenDBConnection() (*Queries, error) {
@@ -22,7 +23,7 @@ func OpenDBConnection() (*Queries, error) {
 	}
 
 	return &Queries{
-		UrlQuery: &queries.UrlQuery{
+		URLQuery: &queries.URLQuery{
 			DB : db,
 			RDB : rdb,
 		},

@@ -1,3 +1,4 @@
+//Package routes include all the routes
 package routes
 
 import (
@@ -15,7 +16,7 @@ func PublicRoutes(r *gin.RouterGroup, uc *controllers.URLController) {
 			100,
 			time.Minute,
 		),
-		uc.RedirectUrl)
+		uc.RedirectURL)
 	r.POST("/shorten",
 		middleware.RateLimiter(
 			uc.Query.RDB,

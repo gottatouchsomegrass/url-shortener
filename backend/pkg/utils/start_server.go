@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-//start the server with graceful shutdown
+//StartSvrGracefulShutdown starts the server with graceful shutdown
 func StartSvrGracefulShutdown(srv *http.Server)  {
 	
 	//running server in bg

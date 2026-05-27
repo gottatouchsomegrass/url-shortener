@@ -1,3 +1,4 @@
+//Package middleware manages middleware of the routes
 package middleware
 
 import (
@@ -8,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-//fixed window rate limiter
+//RateLimiter : fixed window rate limiter
 func RateLimiter(rdb *redis.Client, limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context){
 		ctx := c.Request.Context()

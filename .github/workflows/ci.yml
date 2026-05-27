@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - dev
-
   pull_request:
     branches:
       - main
@@ -13,15 +12,31 @@ on:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+    # ── Uncomment if your tests need a PostgreSQL database ──
+    # services:
+    #   postgres:
+    #     image: postgres:15
+    #     env:
+    #       POSTGRES_USER: postgres
+    #       POSTGRES_PASSWORD: postgres
+    #       POSTGRES_DB: testdb
+    #     ports:
+    #       - 5432:5432
+    #     options: >-
+    #       --health-cmd pg_isready
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 5
 
     defaults:
       run:
         working-directory: backend
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -29,18 +44,33 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
 
       - name: Verify dependencies
-        run: go mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Load test environment variables
+        run: |
+          if [ -f .env.test ]; then
+            grep -v '^#' .env.test | grep -v '^$' >> $GITHUB_ENV
+          fi
 
       - name: Run formatter check
-        run: test -z "$(gofmt -l .)"
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "The following files are not formatted:"
+            echo "$files"
+            exit 1
+          fi
 
       - name: Run vet
         run: go vet ./...
 
       - name: Run tests
-        run: go test ./...
+        run: go test -v -race -count=1 ./...
 
       - name: Build application
         run: go build ./...

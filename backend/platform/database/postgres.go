@@ -12,8 +12,8 @@ import (
 
 func PostgreSQLConnection() (*pgxpool.Pool, error) {
 	//dburl defn
-	dbUrl := os.Getenv("DB_SERVER_URL")
-	conf, err := pgxpool.ParseConfig(dbUrl)
+	dbURL := os.Getenv("DB_SERVER_URL")
+	conf, err := pgxpool.ParseConfig(dbURL)
 	if err!=nil {
 		return nil,err
 	}
