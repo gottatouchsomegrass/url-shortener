@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+
   pull_request:
     branches:
       - main
@@ -16,21 +17,35 @@ jobs:
 
     timeout-minutes: 5
 
-    # ── Uncomment if your tests need a PostgreSQL database ──
-    # services:
-    #   postgres:
-    #     image: postgres:15
-    #     env:
-    #       POSTGRES_USER: postgres
-    #       POSTGRES_PASSWORD: postgres
-    #       POSTGRES_DB: testdb
-    #     ports:
-    #       - 5432:5432
-    #     options: >-
-    #       --health-cmd pg_isready
-    #       --health-interval 10s
-    #       --health-timeout 5s
-    #       --health-retries 5
+    services:
+      postgres:
+        image: postgres:17
+
+        env:
+          POSTGRES_USER: urluser
+          POSTGRES_PASSWORD: yourpassword
+          POSTGRES_DB: url_shortener_test
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd "pg_isready -U urluser -d url_shortener_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+
+        ports:
+          - 6379:6379
+
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
@@ -49,17 +64,33 @@ jobs:
       - name: Verify dependencies
         run: |
           go mod tidy
-          git diff --exit-code go.mod go.sum
+          git diff -- go.mod go.sum
+          git diff --exit-code -- go.mod go.sum
 
-      - name: Load test environment variables
+      - name: Verify Go modules
+        run: go mod verify
+
+      - name: Create test environment file
         run: |
-          if [ -f .env.test ]; then
-            grep -v '^#' .env.test | grep -v '^$' >> $GITHUB_ENV
-          fi
+          cat <<EOF > .env.test
+          DB_SERVER_URL=postgres://urluser:yourpassword@127.0.0.1:5432/url_shortener_test?sslmode=disable
+
+          DB_MAX_CONNECTIONS=20
+          DB_MAX_IDLE_CONNECTIONS=5
+          DB_MAX_LIFETIME_CONNECTIONS=2
+
+          REDIS_ADDR=127.0.0.1:6379
+          REDIS_PASSWORD=
+          REDIS_DB=1
+
+          PORT=8080
+          GIN_MODE=test
+          EOF
 
       - name: Run formatter check
         run: |
           files=$(gofmt -l .)
+
           if [ -n "$files" ]; then
             echo "The following files are not formatted:"
             echo "$files"
