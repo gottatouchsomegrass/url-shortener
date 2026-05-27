@@ -9,13 +9,22 @@ type Queries struct {
 }
 
 func OpenDBConnection() (*Queries, error) {
-	//defn a new conn
+	//postgres conn
 	db, err := PostgreSQLConnection()
 	if err!=nil {
 		return nil, err
 	}
 
+	//redis conn
+	rdb, err := RedisConnection()
+	if err!=nil {
+		return nil, err
+	}
+
 	return &Queries{
-		UrlQuery: &queries.UrlQuery{DB : db},
+		UrlQuery: &queries.UrlQuery{
+			DB : db,
+			RDB : rdb,
+		},
 	},nil
 }

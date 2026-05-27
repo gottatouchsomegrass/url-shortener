@@ -3,14 +3,18 @@ package queries
 import (
 	"context"
 	"errors"
+	"log"
+	"time"
 
 	"github.com/gottatouchsomegrass/url/app/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type UrlQuery struct {
-	DB *pgxpool.Pool
+	DB	*pgxpool.Pool
+	RDB	*redis.Client
 }
 
 //insert url to db
@@ -30,6 +34,17 @@ func (q *UrlQuery) CreateUrl(ctx context.Context, url *models.URL) error {
 
 //get by short url from db
 func (q *UrlQuery) GetByShortUrl(ctx context.Context, code string) (*models.URL, error) {
+	cached, err := q.RDB.Get(ctx,code).Result()
+	if err==nil{
+		return &models.URL{
+			ShortURL: code,
+			LongURL: cached,
+		},nil
+	}
+	if err!=redis.Nil {
+		log.Println("redis err:",err)
+	}
+	
 	query := `
 		SELECT id, short_url, long_url, expiry, clicks, created_at
 		FROM urls
@@ -38,7 +53,7 @@ func (q *UrlQuery) GetByShortUrl(ctx context.Context, code string) (*models.URL,
 
 	var url models.URL
 
-	err := q.DB.QueryRow(ctx,query,code).Scan(
+	err = q.DB.QueryRow(ctx,query,code).Scan(
 		&url.ID,
 		&url.ShortURL,
 		&url.LongURL,
@@ -55,11 +70,40 @@ func (q *UrlQuery) GetByShortUrl(ctx context.Context, code string) (*models.URL,
 		return nil,err
 	}
 
+	ttl := time.Hour
+
+	if url.Expiry !=nil {
+		remaining := time.Until(*url.Expiry)
+		if remaining <= 0 {
+			return nil,errors.New("link expired")	
+		}
+		if remaining <= ttl {
+			ttl = remaining
+		}
+	}
+	err = q.RDB.Set(
+		ctx,
+		code,
+		url.LongURL,
+		ttl,
+	).Err()
+
+	if err!=nil {
+		log.Println("redis set err:", err)
+	}
+
 	return &url,nil
 }
 
 //check whether customcode exists or not
 func (q *UrlQuery) CustomCodeExists(ctx context.Context, code string) (bool, error) {
+	// _, err := q.RDB.Get(ctx,code).Result()
+	// if err==nil {
+	// 	return true, nil
+	// }
+	// if err!=redis.Nil {
+	// 	return false, err
+	// }
 	query := `
 		SELECT EXISTS (
 			SELECT 1 FROM urls WHERE short_url = $1

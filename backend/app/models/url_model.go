@@ -21,7 +21,7 @@ func (u URL) Value() (driver.Value, error) {
 	return json.Marshal(u)
 }
 
-func (u *URL) Scan(value interface{}) error {
+func (u *URL) Scan(value any) error {
 	j, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
