@@ -43,8 +43,8 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 	)
 
 	shortened := req.CustomCode
-	if shortened=="" {
-		shortened=utils.GenerateShortCode()
+	if shortened == "" {
+		shortened = utils.GenerateShortCode()
 	}
 
 	exists, err := uc.Query.CustomCodeExists(
@@ -65,7 +65,6 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 		})
 		return
 	}
-
 
 	newURL := models.URL{
 		LongURL:   req.LongURL,
