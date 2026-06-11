@@ -17,7 +17,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 		middleware.AuthMiddleware(),
 	)
 	auth := r.Group("/auth")
-	auth.POST("/logout", auc.Logout)
+	// auth.POST("/logout", auc.Logout)
 	auth.GET("/me", auc.Me)
 
 	// analytics private endpoints

@@ -356,10 +356,6 @@ func (q *URLQuery) GetDeviceAnalytics(
 		analytics = append(analytics, deviceAnalytics)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	return analytics, nil
 }
 

@@ -113,16 +113,16 @@ func (auc *AuthController) Login(c *gin.Context) {
 }
 
 // Logout logs out the user by invalidating their token.(use then when using refresh tokens or Redis Blacklist)
-func (auc *AuthController) Logout(c *gin.Context) {
-	userID := c.MustGet(
-		"userID",
-	).(int64)
-	if err := auc.Query.InvalidateToken(c.Request.Context(), userID); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"message": "user logged out successfully"})
-}
+// func (auc *AuthController) Logout(c *gin.Context) {
+// 	userID := c.MustGet(
+// 		"userID",
+// 	).(int64)
+// 	if err := auc.Query.InvalidateToken(c.Request.Context(), userID); err != nil {
+// 		c.JSON(500, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(200, gin.H{"message": "user logged out successfully"})
+// }
 
 // Me returns the user's information.
 func (auc *AuthController) Me(
