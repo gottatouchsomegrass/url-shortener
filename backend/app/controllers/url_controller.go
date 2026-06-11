@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mileusna/useragent"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/models"
 	"github.com/gottatouchsomegrass/url/app/queries"
@@ -16,10 +18,12 @@ type URLController struct {
 }
 
 type Request struct {
-	LongURL    string `json:"long_url" binding:"required,url"`
-	CustomCode string `json:"custom_code,omitempty" binding:"omitempty,shortcode"`
+	LongURL    string     `json:"long_url" binding:"required,url"`
+	CustomCode string     `json:"custom_code,omitempty" binding:"omitempty,shortcode"`
+	Expiry     *time.Time `json:"expiry,omitempty"`
 }
 
+// NewURLController adds new url to db
 func NewURLController(q *queries.URLQuery) *URLController {
 	return &URLController{Query: q}
 }
@@ -66,7 +70,9 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 		return
 	}
 
+	userID := c.MustGet("userID").(int64)
 	newURL := models.URL{
+		UserID:    userID,
 		LongURL:   req.LongURL,
 		ShortURL:  shortened,
 		Expiry:    &expiry,
@@ -87,6 +93,7 @@ func (uc *URLController) ShortenURL(c *gin.Context) {
 	})
 }
 
+// RedirectURL redirects url
 func (uc *URLController) RedirectURL(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -108,11 +115,37 @@ func (uc *URLController) RedirectURL(c *gin.Context) {
 		return
 	}
 
+	// expiry check
 	if URL.Expiry != nil && time.Now().After(*URL.Expiry) {
 		c.JSON(410, gin.H{
 			"err": "link expired",
 		})
 		return
+	}
+
+	//increment clicks
+	if err := uc.Query.IncrementClicks(ctx, URL.ID); err != nil {
+		fmt.Println("query err increment clicks: \n", err)
+	}
+
+	ua := useragent.Parse(c.Request.UserAgent())
+
+	browser := ua.Name
+	device := ua.Device
+
+	// record analytics event
+	event := models.ClickEvent{
+		URLID:     URL.ID,
+		IPAddress: c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+		Referer:   c.Request.Referer(),
+		Country:   "",
+		Device:    device,
+		Browser:   browser,
+	}
+
+	if err := uc.Query.CreateClickEvent(ctx, &event); err != nil {
+		fmt.Println(err)
 	}
 
 	c.Redirect(302, URL.LongURL)

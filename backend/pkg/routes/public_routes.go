@@ -9,7 +9,17 @@ import (
 	"github.com/gottatouchsomegrass/url/pkg/middleware"
 )
 
-func PublicRoutes(r *gin.RouterGroup, uc *controllers.URLController) {
+func PublicRoutes(r *gin.RouterGroup,
+	uc *controllers.URLController,
+	ac *controllers.AnalyticsController,
+	authController *controllers.AuthController) {
+
+	//auth public routes
+	auth := r.Group("/auth")
+	auth.POST("/register", authController.Register)
+	auth.POST("/login", authController.Login)
+
+	//url public routes
 	r.GET("/:shortCode",
 		middleware.RateLimiter(
 			uc.Query.RDB,
@@ -17,11 +27,4 @@ func PublicRoutes(r *gin.RouterGroup, uc *controllers.URLController) {
 			time.Minute,
 		),
 		uc.RedirectURL)
-	r.POST("/shorten",
-		middleware.RateLimiter(
-			uc.Query.RDB,
-			20,
-			time.Minute,
-		),
-		uc.ShortenURL)
 }
