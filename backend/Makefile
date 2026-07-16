@@ -3,7 +3,7 @@
 APP_NAME = url 
 BUILD_DIR = $(PWD)/build
 MIGRATIONS_FOLDER = $(PWD)/platform/migrations
-DATABASE_URL = postgres://postgres:password@localhost/postgres?sslmode=disable
+DATABASE_URL = postgres://urluser:yourpassword@127.0.0.1:5432/url_shortener?sslmode=disable
 
 clean:
 	rm -rf ./build

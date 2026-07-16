@@ -5,14 +5,15 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gottatouchsomegrass/url/app/models"
 	"github.com/gottatouchsomegrass/url/app/queries"
 )
 
 type AnalyticsController struct {
-	Query *queries.URLQuery
+	Query *queries.AnalyticsQuery
 }
 
-func NewAnalyticsController(q *queries.URLQuery) *AnalyticsController {
+func NewAnalyticsController(q *queries.AnalyticsQuery) *AnalyticsController {
 	return &AnalyticsController{
 		Query: q,
 	}
@@ -31,8 +32,8 @@ func (ac *AnalyticsController) authorizeURL(
 	)
 
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "invalid url id",
+		c.JSON(400, models.HTTPError{
+			Error: "invalid url id",
 		})
 		return 0, false
 	}
@@ -43,15 +44,22 @@ func (ac *AnalyticsController) authorizeURL(
 	)
 
 	if err != nil {
-		c.JSON(404, gin.H{
-			"error": "url not found",
+		c.JSON(500, models.HTTPDetailsError{
+			Error:   "internal server error",
+			Details: err.Error(),
+		})
+		return 0, false
+	}
+	if url == nil {
+		c.JSON(http.StatusNotFound, models.HTTPError{
+			Error: "url not found",
 		})
 		return 0, false
 	}
 
 	if url.UserID != userID {
-		c.JSON(403, gin.H{
-			"error": "forbidden",
+		c.JSON(403, models.HTTPError{
+			Error: "forbidden",
 		})
 		return 0, false
 	}
@@ -59,6 +67,19 @@ func (ac *AnalyticsController) authorizeURL(
 	return urlID, true
 }
 
+// GetAnalyticsOverview godoc
+// @Summary      Get URL analytics overview
+// @Description  Get click stats summary (today, this week, this month, total clicks) for a URL ID
+// @Tags         analytics
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "URL ID"
+// @Success      200  {object}  models.AnalyticsOverview
+// @Failure      400  {object}  models.HTTPError
+// @Failure      403  {object}  models.HTTPError
+// @Failure      404  {object}  models.HTTPError
+// @Failure      500  {object}  models.HTTPDetailsError
+// @Router       /analytics/{id}/overview [get]
 func (ac *AnalyticsController) GetAnalyticsOverview(c *gin.Context) {
 	ctx := c.Request.Context()
 	urlID, ok := ac.authorizeURL(c)
@@ -72,8 +93,9 @@ func (ac *AnalyticsController) GetAnalyticsOverview(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to fetch analytics",
+		c.JSON(http.StatusInternalServerError, models.HTTPDetailsError{
+			Error:   "failed to fetch analytics",
+			Details: err.Error(),
 		})
 		return
 	}
@@ -81,6 +103,19 @@ func (ac *AnalyticsController) GetAnalyticsOverview(c *gin.Context) {
 	c.JSON(http.StatusOK, overview)
 }
 
+// GetDailyClicks godoc
+// @Summary      Get daily click analytics
+// @Description  Get a list of dates and click counts for a URL ID
+// @Tags         analytics
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "URL ID"
+// @Success      200  {array}   models.DailyClick
+// @Failure      400  {object}  models.HTTPError
+// @Failure      403  {object}  models.HTTPError
+// @Failure      404  {object}  models.HTTPError
+// @Failure      500  {object}  models.HTTPDetailsError
+// @Router       /analytics/{id}/daily [get]
 func (ac *AnalyticsController) GetDailyClicks(
 	c *gin.Context,
 ) {
@@ -96,8 +131,9 @@ func (ac *AnalyticsController) GetDailyClicks(
 	)
 
 	if err != nil {
-		c.JSON(500, gin.H{
-			"error": "failed to fetch clicks",
+		c.JSON(500, models.HTTPDetailsError{
+			Error:   "failed to fetch clicks",
+			Details: err.Error(),
 		})
 		return
 	}
@@ -105,6 +141,19 @@ func (ac *AnalyticsController) GetDailyClicks(
 	c.JSON(200, clicks)
 }
 
+// GetRecentVisits godoc
+// @Summary      Get recent visits logs
+// @Description  Get up to 20 recent visitor events (IP, User Agent, Referer, Browser, Device, CreatedAt) for a URL ID
+// @Tags         analytics
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "URL ID"
+// @Success      200  {array}   models.RecentVisit
+// @Failure      400  {object}  models.HTTPError
+// @Failure      403  {object}  models.HTTPError
+// @Failure      404  {object}  models.HTTPError
+// @Failure      500  {object}  models.HTTPDetailsError
+// @Router       /analytics/{id}/recent [get]
 func (ac *AnalyticsController) GetRecentVisits(
 	c *gin.Context,
 ) {
@@ -120,11 +169,88 @@ func (ac *AnalyticsController) GetRecentVisits(
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to fetch recent visits",
+		c.JSON(http.StatusInternalServerError, models.HTTPDetailsError{
+			Error:   "failed to fetch recent visits",
+			Details: err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, visits)
+}
+
+// GetBrowserAnalytics godoc
+// @Summary      Get browser distribution analytics
+// @Description  Get visitor distribution stats grouped by browser type for a URL ID
+// @Tags         analytics
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "URL ID"
+// @Success      200  {array}   models.BrowserAnalytics
+// @Failure      400  {object}  models.HTTPError
+// @Failure      403  {object}  models.HTTPError
+// @Failure      404  {object}  models.HTTPError
+// @Failure      500  {object}  models.HTTPDetailsError
+// @Router       /analytics/{id}/browser [get]
+func (ac *AnalyticsController) GetBrowserAnalytics(
+	c *gin.Context,
+) {
+	ctx := c.Request.Context()
+	urlID, ok := ac.authorizeURL(c)
+	if !ok {
+		return
+	}
+
+	browserStats, err := ac.Query.GetBrowserAnalytics(
+		ctx,
+		urlID,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPDetailsError{
+			Error:   "failed to fetch browser analytics",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, browserStats)
+}
+
+// GetDeviceAnalytics godoc
+// @Summary      Get device distribution analytics
+// @Description  Get visitor distribution stats grouped by device type for a URL ID
+// @Tags         analytics
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "URL ID"
+// @Success      200  {array}   models.DeviceAnalytics
+// @Failure      400  {object}  models.HTTPError
+// @Failure      403  {object}  models.HTTPError
+// @Failure      404  {object}  models.HTTPError
+// @Failure      500  {object}  models.HTTPDetailsError
+// @Router       /analytics/{id}/device [get]
+func (ac *AnalyticsController) GetDeviceAnalytics(
+	c *gin.Context,
+) {
+	ctx := c.Request.Context()
+	urlID, ok := ac.authorizeURL(c)
+	if !ok {
+		return
+	}
+
+	deviceStats, err := ac.Query.GetDeviceAnalytics(
+		ctx,
+		urlID,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPDetailsError{
+			Error:   "failed to fetch device analytics",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, deviceStats)
 }

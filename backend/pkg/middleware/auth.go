@@ -5,10 +5,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gottatouchsomegrass/url/app/queries"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(q *queries.UserQuery) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader(
 			"Authorization",
@@ -43,9 +44,25 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// Check if token is blacklisted
+		isBlacklisted, err := q.IsTokenBlacklisted(c.Request.Context(), tokenString)
+		if err != nil || isBlacklisted {
+			c.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				gin.H{
+					"error": "token has been logged out",
+				},
+			)
+			return
+		}
+
 		c.Set(
 			"userID",
 			claims.UserID,
+		)
+		c.Set(
+			"userRole",
+			claims.Role,
 		)
 
 		c.Next()

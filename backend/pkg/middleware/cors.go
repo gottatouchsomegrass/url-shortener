@@ -3,7 +3,6 @@ package middleware
 import "github.com/gin-gonic/gin"
 
 // CORS returns a middleware that handles Cross-Origin Resource Sharing (CORS).
-// This is essential for frontend-backend communication when deployed on different domains.
 func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

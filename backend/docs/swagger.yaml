@@ -1,0 +1,813 @@
+basePath: /api/v1
+definitions:
+  controllers.BulkDeleteRequest:
+    properties:
+      ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    required:
+    - ids
+    type: object
+  controllers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  controllers.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  controllers.Request:
+    properties:
+      custom_code:
+        type: string
+      expiry:
+        type: string
+      long_url:
+        type: string
+    required:
+    - long_url
+    type: object
+  controllers.UpdateURLRequest:
+    properties:
+      long_url:
+        type: string
+    required:
+    - long_url
+    type: object
+  models.AnalyticsOverview:
+    properties:
+      this_month:
+        type: integer
+      this_week:
+        type: integer
+      today:
+        type: integer
+      total_clicks:
+        type: integer
+    type: object
+  models.AuthLoginSuccess:
+    properties:
+      message:
+        example: user logged in successfully
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  models.AuthRegisterSuccess:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  models.BrowserAnalytics:
+    properties:
+      browser:
+        type: string
+      count:
+        type: integer
+    type: object
+  models.DailyClick:
+    properties:
+      clicks:
+        type: integer
+      date:
+        type: string
+    type: object
+  models.DeviceAnalytics:
+    properties:
+      count:
+        type: integer
+      device:
+        type: string
+    type: object
+  models.HTTPDetailsError:
+    properties:
+      details:
+        example: connection refused
+        type: string
+      error:
+        example: failed to fetch analytics
+        type: string
+    type: object
+  models.HTTPError:
+    properties:
+      error:
+        example: invalid credentials
+        type: string
+    type: object
+  models.HTTPResponseErr:
+    properties:
+      err:
+        example: not found
+        type: string
+    type: object
+  models.HTTPValidationError:
+    properties:
+      error:
+        additionalProperties:
+          type: string
+        example:
+          long_url: give valid URL
+        type: object
+    type: object
+  models.MessageSuccess:
+    properties:
+      message:
+        example: operation successful
+        type: string
+    type: object
+  models.PaginatedURLResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.URL'
+        type: array
+      meta:
+        $ref: '#/definitions/models.PaginationMeta'
+    type: object
+  models.PaginatedUserResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      meta:
+        $ref: '#/definitions/models.PaginationMeta'
+    type: object
+  models.PaginationMeta:
+    properties:
+      limit:
+        example: 50
+        type: integer
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 150
+        type: integer
+      total_pages:
+        example: 3
+        type: integer
+    type: object
+  models.RecentVisit:
+    properties:
+      browser:
+        type: string
+      created_at:
+        type: string
+      device:
+        type: string
+      ip_address:
+        type: string
+      referer:
+        type: string
+    type: object
+  models.URL:
+    properties:
+      clicks:
+        type: integer
+      created_at:
+        type: string
+      expiry:
+        type: string
+      id:
+        description: go for uuid later
+        type: integer
+      long_url:
+        type: string
+      short_url:
+        type: string
+      user_id:
+        type: integer
+    required:
+    - long_url
+    - short_url
+    type: object
+  models.URLShortenSuccess:
+    properties:
+      success:
+        example: url inserted to db
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: High performance URL shortener API with cache-aside caching and analytics.
+  title: URL Shortener
+  version: "0.67"
+paths:
+  /{shortCode}:
+    get:
+      description: Redirect a short code to its original long URL and log click analytics
+      parameters:
+      - description: Short URL Code
+        in: path
+        name: shortCode
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Redirects to long URL
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+      summary: Redirect short code
+      tags:
+      - urls
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all users in the system (Admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 50
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedUserResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+      security:
+      - Bearer: []
+      summary: Get all users
+      tags:
+      - admin
+  /admin/users/{userid}/urls:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of URLs belonging to a specific user (Admin
+        only)
+      parameters:
+      - description: User ID
+        in: path
+        name: userid
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 50
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedURLResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+      security:
+      - Bearer: []
+      summary: Get URLs of a specific user
+      tags:
+      - admin
+  /analytics/{id}/browser:
+    get:
+      description: Get visitor distribution stats grouped by browser type for a URL
+        ID
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BrowserAnalytics'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPDetailsError'
+      security:
+      - Bearer: []
+      summary: Get browser distribution analytics
+      tags:
+      - analytics
+  /analytics/{id}/daily:
+    get:
+      description: Get a list of dates and click counts for a URL ID
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.DailyClick'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPDetailsError'
+      security:
+      - Bearer: []
+      summary: Get daily click analytics
+      tags:
+      - analytics
+  /analytics/{id}/device:
+    get:
+      description: Get visitor distribution stats grouped by device type for a URL
+        ID
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.DeviceAnalytics'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPDetailsError'
+      security:
+      - Bearer: []
+      summary: Get device distribution analytics
+      tags:
+      - analytics
+  /analytics/{id}/overview:
+    get:
+      description: Get click stats summary (today, this week, this month, total clicks)
+        for a URL ID
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AnalyticsOverview'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPDetailsError'
+      security:
+      - Bearer: []
+      summary: Get URL analytics overview
+      tags:
+      - analytics
+  /analytics/{id}/recent:
+    get:
+      description: Get up to 20 recent visitor events (IP, User Agent, Referer, Browser,
+        Device, CreatedAt) for a URL ID
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RecentVisit'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPDetailsError'
+      security:
+      - Bearer: []
+      summary: Get recent visits logs
+      tags:
+      - analytics
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return a JWT token
+      parameters:
+      - description: Login Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthLoginSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Invalidate the user's JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - Bearer: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/me:
+    delete:
+      description: Completely delete the user's account and all associated URLs and
+        analytics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - Bearer: []
+      summary: Delete user account
+      tags:
+      - auth
+    get:
+      description: Get current authenticated user info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - Bearer: []
+      summary: Get current user info
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account and return a JWT token
+      parameters:
+      - description: Registration Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.AuthRegisterSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Register a new user
+      tags:
+      - auth
+  /shorten:
+    post:
+      consumes:
+      - application/json
+      description: Shorten a long URL, optionally with a custom code and expiry
+      parameters:
+      - description: Shorten URL request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.Request'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.URLShortenSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - Bearer: []
+      summary: Create a shortened URL
+      tags:
+      - urls
+  /urls:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of URLs shortened by the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 50
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedURLResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+      security:
+      - Bearer: []
+      summary: Get user's shortened URLs
+      tags:
+      - urls
+  /urls/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a shortened URL by its ID
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+      security:
+      - Bearer: []
+      summary: Delete a shortened URL
+      tags:
+      - urls
+    put:
+      consumes:
+      - application/json
+      description: Update the long URL destination of an existing shortened URL
+      parameters:
+      - description: URL ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update URL request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - Bearer: []
+      summary: Update a shortened URL
+      tags:
+      - urls
+  /urls/bulk:
+    delete:
+      consumes:
+      - application/json
+      description: Delete multiple shortened URLs by their IDs
+      parameters:
+      - description: Bulk delete request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.BulkDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MessageSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPValidationError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPResponseErr'
+      security:
+      - Bearer: []
+      summary: Bulk delete shortened URLs
+      tags:
+      - urls
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -7,6 +7,7 @@ import (
 
 type Queries struct {
 	*queries.URLQuery
+	*queries.AnalyticsQuery
 	*queries.UserQuery
 }
 
@@ -27,6 +28,9 @@ func OpenDBConnection() (*Queries, error) {
 		URLQuery: &queries.URLQuery{
 			DB:  db,
 			RDB: rdb,
+		},
+		AnalyticsQuery: &queries.AnalyticsQuery{
+			DB: db,
 		},
 		UserQuery: &queries.UserQuery{
 			DB: db,

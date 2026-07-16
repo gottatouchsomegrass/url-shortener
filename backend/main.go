@@ -5,25 +5,37 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/controllers"
+	_ "github.com/gottatouchsomegrass/url/docs"
 	"github.com/gottatouchsomegrass/url/pkg/configs"
 	"github.com/gottatouchsomegrass/url/pkg/middleware"
 	"github.com/gottatouchsomegrass/url/pkg/routes"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 	"github.com/gottatouchsomegrass/url/platform/database"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           URL Shortener
+// @version         0.67
+// @description     High performance URL shortener API with cache-aside caching and analytics.
+// @host            localhost:8080
+// @BasePath        /api/v1
+// @securityDefinitions.apikey Bearer
+// @in              header
+// @name            Authorization
 func main() {
 	utils.InitValidator()
 
-	// Load environment variables from .env files if present.
-	// In cloud production environments, environment variables are typically injected directly.
 	_ = godotenv.Load(".env.test")
 	_ = godotenv.Load()
 
 	r := gin.Default()
 
-	// Enable CORS for cross-origin frontend requests
+	// Swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// CORS
 	r.Use(middleware.CORS())
 
 	dbq, err := database.OpenDBConnection()
@@ -44,15 +56,20 @@ func main() {
 		dbq.URLQuery,
 	)
 	analyticsController := controllers.NewAnalyticsController(
-		dbq.URLQuery,
+		dbq.AnalyticsQuery,
 	)
 	authController := controllers.NewAuthController(
 		dbq.UserQuery,
+	)
+	adminController := controllers.NewAdminController(
+		dbq.UserQuery,
+		dbq.URLQuery,
 	)
 
 	api := r.Group("/api/v1")
 	routes.PublicRoutes(api, urlController, analyticsController, authController)
 	routes.PrivateRoutes(api, urlController, analyticsController, authController)
+	routes.AdminRoutes(api, adminController)
 
 	svr := configs.ConfigHTTPServer(r)
 	utils.StartSvrGracefulShutdown(svr)
