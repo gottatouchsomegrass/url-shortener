@@ -2,13 +2,13 @@
 package database
 
 import (
-	"github.com/gottatouchsomegrass/url/app/queries"
+	"github.com/gottatouchsomegrass/url/app/repositories"
 )
 
 type Queries struct {
-	*queries.URLQuery
-	*queries.AnalyticsQuery
-	*queries.UserQuery
+	*repositories.URLQuery
+	*repositories.AnalyticsQuery
+	*repositories.UserQuery
 }
 
 func OpenDBConnection() (*Queries, error) {
@@ -25,14 +25,14 @@ func OpenDBConnection() (*Queries, error) {
 	}
 
 	return &Queries{
-		URLQuery: &queries.URLQuery{
+		URLQuery: &repositories.URLQuery{
 			DB:  db,
 			RDB: rdb,
 		},
-		AnalyticsQuery: &queries.AnalyticsQuery{
+		AnalyticsQuery: &repositories.AnalyticsQuery{
 			DB: db,
 		},
-		UserQuery: &queries.UserQuery{
+		UserQuery: &repositories.UserQuery{
 			DB: db,
 		},
 	}, nil

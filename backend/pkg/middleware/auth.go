@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gottatouchsomegrass/url/app/queries"
+	"github.com/gottatouchsomegrass/url/app/repositories"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 )
 
-func AuthMiddleware(q *queries.UserQuery) gin.HandlerFunc {
+func AuthMiddleware(q *repositories.UserQuery) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader(
 			"Authorization",
@@ -63,6 +63,10 @@ func AuthMiddleware(q *queries.UserQuery) gin.HandlerFunc {
 		c.Set(
 			"userRole",
 			claims.Role,
+		)
+		c.Set(
+			"sessionID",
+			claims.SessionID,
 		)
 
 		c.Next()

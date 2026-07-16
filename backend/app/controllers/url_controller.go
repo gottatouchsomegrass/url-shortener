@@ -11,12 +11,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/models"
-	"github.com/gottatouchsomegrass/url/app/queries"
+	"github.com/gottatouchsomegrass/url/app/repositories"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 )
 
 type URLController struct {
-	Query *queries.URLQuery
+	Query *repositories.URLQuery
 }
 
 type Request struct {
@@ -26,7 +26,7 @@ type Request struct {
 }
 
 // NewURLController adds new url to db
-func NewURLController(q *queries.URLQuery) *URLController {
+func NewURLController(q *repositories.URLQuery) *URLController {
 	return &URLController{Query: q}
 }
 

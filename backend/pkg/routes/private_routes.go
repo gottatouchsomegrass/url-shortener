@@ -14,11 +14,13 @@ func PrivateRoutes(r *gin.RouterGroup,
 	auc *controllers.AuthController) {
 	//auth private endpoints
 	r.Use(
-		middleware.AuthMiddleware(auc.Query),
+		middleware.AuthMiddleware(auc.Service.UserRepo),
 	)
 	auth := r.Group("/auth")
 	// auth.POST("/logout", auc.Logout)
 	auth.GET("/me", auc.Me)
+	auth.GET("/sessions", auc.GetSessions)
+	auth.DELETE("/sessions/:id", auc.RevokeSession)
 	auth.DELETE(
 		"/me",
 		middleware.RateLimiter(

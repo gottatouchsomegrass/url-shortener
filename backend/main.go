@@ -8,6 +8,7 @@ import (
 	_ "github.com/gottatouchsomegrass/url/docs"
 	"github.com/gottatouchsomegrass/url/pkg/configs"
 	"github.com/gottatouchsomegrass/url/pkg/middleware"
+	"github.com/gottatouchsomegrass/url/app/services"
 	"github.com/gottatouchsomegrass/url/pkg/routes"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 	"github.com/gottatouchsomegrass/url/platform/database"
@@ -58,8 +59,11 @@ func main() {
 	analyticsController := controllers.NewAnalyticsController(
 		dbq.AnalyticsQuery,
 	)
-	authController := controllers.NewAuthController(
+	authService := services.NewAuthService(
 		dbq.UserQuery,
+	)
+	authController := controllers.NewAuthController(
+		authService,
 	)
 	adminController := controllers.NewAdminController(
 		dbq.UserQuery,

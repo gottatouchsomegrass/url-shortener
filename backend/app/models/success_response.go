@@ -40,3 +40,19 @@ type PaginatedUserResponse struct {
 type MessageSuccess struct {
 	Message string `json:"message" example:"operation successful"`
 }
+
+// Session represents a user's active device session
+type Session struct {
+	ID              int64  `json:"id"`
+	Device          string `json:"device"`
+	Browser         string `json:"browser"`
+	Location        string `json:"location"`
+	IPAddress       string `json:"ip_address"`
+	LastActive      string `json:"last_active"`
+	IsCurrentDevice bool   `json:"is_current_device"`
+}
+
+// SessionListResponse represents the response containing a list of sessions
+type SessionListResponse struct {
+	Sessions []Session `json:"sessions"`
+}

@@ -6,14 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/models"
-	"github.com/gottatouchsomegrass/url/app/queries"
+	"github.com/gottatouchsomegrass/url/app/repositories"
 )
 
 type AnalyticsController struct {
-	Query *queries.AnalyticsQuery
+	Query *repositories.AnalyticsQuery
 }
 
-func NewAnalyticsController(q *queries.AnalyticsQuery) *AnalyticsController {
+func NewAnalyticsController(q *repositories.AnalyticsQuery) *AnalyticsController {
 	return &AnalyticsController{
 		Query: q,
 	}

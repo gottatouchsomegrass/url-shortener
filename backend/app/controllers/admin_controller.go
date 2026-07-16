@@ -7,15 +7,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/models"
-	"github.com/gottatouchsomegrass/url/app/queries"
+	"github.com/gottatouchsomegrass/url/app/repositories"
 )
 
 type AdminController struct {
-	UserQuery *queries.UserQuery
-	URLQuery  *queries.URLQuery
+	UserQuery *repositories.UserQuery
+	URLQuery  *repositories.URLQuery
 }
 
-func NewAdminController(uq *queries.UserQuery, urlq *queries.URLQuery) *AdminController {
+func NewAdminController(uq *repositories.UserQuery, urlq *repositories.URLQuery) *AdminController {
 	return &AdminController{
 		UserQuery: uq,
 		URLQuery:  urlq,
