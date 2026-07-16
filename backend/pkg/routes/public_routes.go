@@ -17,19 +17,19 @@ func PublicRoutes(r *gin.RouterGroup,
 	//auth public routes
 	auth := r.Group("/auth")
 	// Max 5 registrations per minute per IP
-	auth.POST("/register", middleware.RateLimiter(uc.Query.RDB, 5, time.Minute),
+	auth.POST("/register", middleware.RateLimiter(uc.RDB, 5, time.Minute),
 		authController.Register)
 	// Max 10 login attempts per minute per IP to prevent Bcrypt DoS
-	auth.POST("/login", middleware.RateLimiter(uc.Query.RDB, 10, time.Minute),
+	auth.POST("/login", middleware.RateLimiter(uc.RDB, 10, time.Minute),
 		authController.Login)
 	// Max 10 refreshes per minute
-	auth.POST("/refresh", middleware.RateLimiter(uc.Query.RDB, 10, time.Minute),
+	auth.POST("/refresh", middleware.RateLimiter(uc.RDB, 10, time.Minute),
 		authController.RefreshToken)
 
 	//url public routes
 	r.GET("/:shortCode",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),

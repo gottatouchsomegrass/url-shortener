@@ -17,19 +17,16 @@ func PrivateRoutes(r *gin.RouterGroup,
 		middleware.AuthMiddleware(auc.Service.UserRepo),
 	)
 	auth := r.Group("/auth")
-	// auth.POST("/logout", auc.Logout)
+	// Uncommented and added Rate Limit
+	auth.POST("/logout", middleware.RateLimiter(uc.RDB, 20, time.Minute), auc.
+		Logout)
 	auth.GET("/me", auc.Me)
-	auth.GET("/sessions", auc.GetSessions)
-	auth.DELETE("/sessions/:id", auc.RevokeSession)
-	auth.DELETE(
-		"/me",
-		middleware.RateLimiter(
-			uc.Query.RDB,
-			5,
-			time.Minute,
-		),
-		auc.DeleteAccount,
-	)
+	// Added Rate Limit
+	auth.GET("/sessions", middleware.RateLimiter(uc.RDB, 30, time.Minute), auc.
+		GetSessions)
+	// Added Rate Limit
+	auth.DELETE("/sessions/:id", middleware.RateLimiter(uc.RDB, 30, time.Minute),
+		auc.RevokeSession)
 
 	// analytics private endpoints
 	analytics := r.Group("/analytics")
@@ -37,7 +34,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	analytics.GET(
 		"/:id/overview",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),
@@ -46,7 +43,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	analytics.GET(
 		"/:id/daily",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),
@@ -55,7 +52,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	analytics.GET(
 		"/:id/recent",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),
@@ -64,7 +61,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	analytics.GET(
 		"/:id/browser",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),
@@ -73,7 +70,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	analytics.GET(
 		"/:id/device",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),
@@ -83,7 +80,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	//url private endpoints
 	r.POST("/shorten",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			40,
 			time.Minute,
 		),
@@ -92,7 +89,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	urls := r.Group("/urls")
 	urls.GET("",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			100,
 			time.Minute,
 		),
@@ -100,7 +97,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	)
 	urls.PUT("/:id",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			40,
 			time.Minute,
 		),
@@ -108,7 +105,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	)
 	urls.DELETE("/:id",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			40,
 			time.Minute,
 		),
@@ -116,7 +113,7 @@ func PrivateRoutes(r *gin.RouterGroup,
 	)
 	urls.DELETE("/bulk",
 		middleware.RateLimiter(
-			uc.Query.RDB,
+			uc.RDB,
 			20,
 			time.Minute,
 		),

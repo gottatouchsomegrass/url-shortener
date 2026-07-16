@@ -53,11 +53,14 @@ func main() {
 	//  ),
 	// )
 
+	urlService := services.NewURLService(dbq.URLQuery)
 	urlController := controllers.NewURLController(
-		dbq.URLQuery,
+		urlService,
+		dbq.URLQuery.RDB,
 	)
+	analyticsService := services.NewAnalyticsService(dbq.AnalyticsQuery)
 	analyticsController := controllers.NewAnalyticsController(
-		dbq.AnalyticsQuery,
+		analyticsService,
 	)
 	authService := services.NewAuthService(
 		dbq.UserQuery,
@@ -65,9 +68,10 @@ func main() {
 	authController := controllers.NewAuthController(
 		authService,
 	)
+	adminService := services.NewAdminService(dbq.UserQuery)
 	adminController := controllers.NewAdminController(
-		dbq.UserQuery,
-		dbq.URLQuery,
+		adminService,
+		urlService,
 	)
 
 	api := r.Group("/api/v1")

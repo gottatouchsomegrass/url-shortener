@@ -26,6 +26,6 @@ This project strictly follows a **Layered Architecture** (Horizontal Slicing).
 3. **Building**: Always run `go build` after making modifications to ensure no syntax or typing errors were introduced.
 
 ## 5. Active Task List / Future Improvements
-* Apply the Service Pattern to `URLController` and `AnalyticsController`.
+* Ensure any new controllers strictly adhere to the Service Pattern.
 * Implement comprehensive Unit Testing for the `AuthService`.
 * Complete the frontend integration and deploy on AWS.

@@ -1,44 +1,29 @@
 package controllers
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/models"
-	"github.com/gottatouchsomegrass/url/app/repositories"
+	"github.com/gottatouchsomegrass/url/app/services"
 )
 
 type AdminController struct {
-	UserQuery *repositories.UserQuery
-	URLQuery  *repositories.URLQuery
+	AdminService *services.AdminService
+	URLService   *services.URLService
 }
 
-func NewAdminController(uq *repositories.UserQuery, urlq *repositories.URLQuery) *AdminController {
+func NewAdminController(as *services.AdminService, us *services.URLService) *AdminController {
 	return &AdminController{
-		UserQuery: uq,
-		URLQuery:  urlq,
+		AdminService: as,
+		URLService:   us,
 	}
 }
 
-// GetAllUsers godoc
-// @Summary      Get all users
-// @Description  Get a paginated list of all users in the system (Admin only)
-// @Tags         admin
-// @Accept       json
-// @Produce      json
-// @Security     Bearer
-// @Param        page    query     int  false  "Page number" default(1)
-// @Param        limit   query     int  false  "Items per page" default(50)
-// @Success      200  {object}  models.PaginatedUserResponse
-// @Failure      500  {object}  models.HTTPResponseErr
-// @Router       /admin/users [get]
-func (ac *AdminController) GetAllUsers(c *gin.Context) {
-	ctx := c.Request.Context()
-
+func parsePagination(c *gin.Context) (int, int) {
 	limitStr := c.Query("limit")
-	limit := 50 // Default value
+	limit := 50
 	if limitStr != "" {
 		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
 			limit = parsedLimit
@@ -53,19 +38,16 @@ func (ac *AdminController) GetAllUsers(c *gin.Context) {
 			offset = (page - 1) * limit
 		}
 	}
+	return limit, offset
+}
 
-	users, err := ac.UserQuery.GetAllUsers(ctx, limit, offset)
-	if err != nil {
-		fmt.Println("error getting users: \n", err)
-		c.JSON(500, models.HTTPResponseErr{
-			Err: "internal server error",
-		})
-		return
-	}
+// GetAllUsers godoc
+func (ac *AdminController) GetAllUsers(c *gin.Context) {
+	ctx := c.Request.Context()
+	limit, offset := parsePagination(c)
 
-	total, err := ac.UserQuery.CountAllUsers(ctx)
+	users, total, err := ac.AdminService.GetAllUsers(ctx, limit, offset)
 	if err != nil {
-		fmt.Println("error counting users: \n", err)
 		c.JSON(500, models.HTTPResponseErr{
 			Err: "internal server error",
 		})
@@ -87,19 +69,6 @@ func (ac *AdminController) GetAllUsers(c *gin.Context) {
 }
 
 // GetUserURLsAsAdmin godoc
-// @Summary      Get URLs of a specific user
-// @Description  Get a paginated list of URLs belonging to a specific user (Admin only)
-// @Tags         admin
-// @Accept       json
-// @Produce      json
-// @Security     Bearer
-// @Param        userid  path      int  true  "User ID"
-// @Param        page    query     int  false  "Page number" default(1)
-// @Param        limit   query     int  false  "Items per page" default(50)
-// @Success      200  {object}  models.PaginatedURLResponse
-// @Failure      400  {object}  models.HTTPError
-// @Failure      500  {object}  models.HTTPResponseErr
-// @Router       /admin/users/{userid}/urls [get]
 func (ac *AdminController) GetUserURLsAsAdmin(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -110,35 +79,10 @@ func (ac *AdminController) GetUserURLsAsAdmin(c *gin.Context) {
 		return
 	}
 
-	limitStr := c.Query("limit")
-	limit := 50 // Default value
-	if limitStr != "" {
-		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
-			limit = parsedLimit
-		}
-	}
+	limit, offset := parsePagination(c)
 
-	offset := 0
-	pageStr := c.Query("page")
-	if pageStr != "" {
-		page, err := strconv.Atoi(pageStr)
-		if err == nil && page > 1 {
-			offset = (page - 1) * limit
-		}
-	}
-
-	URLs, err := ac.URLQuery.GetUserURLs(ctx, userID, limit, offset)
+	URLs, total, err := ac.URLService.GetUserURLs(ctx, userID, limit, offset)
 	if err != nil {
-		fmt.Println("error getting user urls: \n", err)
-		c.JSON(500, models.HTTPResponseErr{
-			Err: "internal server error",
-		})
-		return
-	}
-
-	total, err := ac.URLQuery.CountUserURLs(ctx, userID)
-	if err != nil {
-		fmt.Println("error counting user urls: \n", err)
 		c.JSON(500, models.HTTPResponseErr{
 			Err: "internal server error",
 		})
