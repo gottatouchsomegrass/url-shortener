@@ -11,7 +11,7 @@ import (
 
 func InitValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation(
+		_ = v.RegisterValidation(
 			"shortcode",
 			customCodeValidator,
 		)

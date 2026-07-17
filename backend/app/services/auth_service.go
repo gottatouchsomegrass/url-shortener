@@ -34,7 +34,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, email, password, ip, use
 	if err != nil {
 		return "", "", errors.New("failed to begin transaction")
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	user := models.User{
 		Email:        email,
@@ -104,7 +104,7 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password, ip, userAg
 	if err != nil {
 		return "", "", errors.New("failed to begin transaction")
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.UserRepo.WithTx(tx)
 
@@ -164,7 +164,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken, ip, userAg
 	if err != nil {
 		return "", "", errors.New("failed to begin transaction")
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.UserRepo.WithTx(tx)
 

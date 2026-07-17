@@ -180,7 +180,7 @@ func (q *UserQuery) DeleteUserAccount(ctx context.Context, userID int64) error {
 		return err
 	}
 	// Defer a rollback in case anything fails. If tx.Commit() succeeds, rollback does nothing.
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// 1. Delete all click events for the user's URLs
 	_, err = tx.Exec(ctx, `
