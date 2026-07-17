@@ -359,3 +359,32 @@ func (q *UserQuery) RotateRefreshToken(
 	}
 	return nil
 }
+
+// IncrementLoginAttempt increments the login attempt counter for a specific key.
+// If the key is new, it sets the expiration time for the time window.
+func (q *UserQuery) IncrementLoginAttempt(ctx context.Context, key string, window time.Duration) (int64, error) {
+	if q.RDB == nil {
+		return 0, nil // Skip if Redis is not configured
+	}
+
+	// Increment the key
+	count, err := q.RDB.Incr(ctx, key).Result()
+	if err != nil {
+		return 0, err
+	}
+
+	// If this is the first attempt, set the expiration window
+	if count == 1 {
+		q.RDB.Expire(ctx, key, window)
+	}
+
+	return count, nil
+}
+
+// ResetLoginAttempts deletes the rate limit keys upon a successful login.
+func (q *UserQuery) ResetLoginAttempts(ctx context.Context, keys ...string) error {
+	if q.RDB == nil {
+		return nil
+	}
+	return q.RDB.Del(ctx, keys...).Err()
+}

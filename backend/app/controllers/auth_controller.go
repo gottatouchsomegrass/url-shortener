@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/models"
 	"github.com/gottatouchsomegrass/url/app/services"
+	"github.com/gottatouchsomegrass/url/pkg/utils"
 	"github.com/mssola/user_agent"
 )
 
@@ -99,6 +101,11 @@ func (auc *AuthController) Login(c *gin.Context) {
 
 	token, refresh, err := auc.Service.LoginUser(ctx, req.Email, req.Password, c.ClientIP(), c.Request.UserAgent())
 	if err != nil {
+		if errors.Is(err, utils.ErrRateLimitExceeded) {
+			c.JSON(429, models.HTTPError{Error: "Too many login attempts. Please try again in 15 minutes."})
+			return
+		}
+		
 		// In a real app, map errors to correct status codes (401 vs 500)
 		if err.Error() == "invalid credentials" {
 			c.JSON(401, models.HTTPError{Error: err.Error()})

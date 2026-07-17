@@ -12,6 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var ErrRateLimitExceeded = errors.New("rate limit exceeded: too many login attempts")
+
 type AuthService struct {
 	UserRepo *repositories.UserQuery
 }
@@ -82,6 +84,11 @@ func (s *AuthService) RegisterUser(ctx context.Context, email, password, ip, use
 }
 
 func (s *AuthService) LoginUser(ctx context.Context, email, password, ip, userAgent string) (string, string, error) {
+	// --- 1. RATE LIMITING CHECK ---
+	if err := utils.CheckLoginRateLimit(ctx, s.UserRepo.RDB, ip, email); err != nil {
+		return "", "", err
+	}
+
 	user, err := s.UserRepo.GetUserByEmail(ctx, email)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", "", errors.New("invalid credentials")
@@ -130,6 +137,9 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password, ip, userAg
 	if err != nil {
 		return "", "", err
 	}
+
+	// --- 2. CLEAR LIMITS ON SUCCESS ---
+	utils.ResetLoginAttempts(ctx, s.UserRepo.RDB, ip, email)
 
 	// return jwt token, refresh token, error
 	return token, refresh, nil
