@@ -38,7 +38,10 @@ func (s *AuthService) RegisterUser(ctx context.Context, email, password, ip, use
 		Email:        email,
 		PasswordHash: string(hash),
 	}
-	err = s.UserRepo.CreateUserTx(ctx, tx, &user)
+
+	qtx := s.UserRepo.WithTx(tx)
+
+	err = qtx.CreateUser(ctx, &user)
 	if err != nil {
 		return "", "", err
 	}
@@ -55,12 +58,12 @@ func (s *AuthService) RegisterUser(ctx context.Context, email, password, ip, use
 		IP:          ip,
 		UserAgent:   userAgent,
 	}
-	err = s.UserRepo.CreateRefreshTokenTx(ctx, tx, &rt)
+	err = qtx.CreateRefreshToken(ctx, &rt)
 	if err != nil {
 		return "", "", errors.New("failed to store refresh token")
 	}
 
-	err = s.UserRepo.EnforceMaxRefreshTokensTx(ctx, tx, user.ID, 10)
+	err = qtx.EnforceMaxRefreshTokens(ctx, user.ID, 10)
 	if err != nil {
 		return "", "", errors.New("failed to enforce max refresh sessions")
 	}
@@ -96,6 +99,8 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password, ip, userAg
 	}
 	defer tx.Rollback(ctx)
 
+	qtx := s.UserRepo.WithTx(tx)
+
 	refresh, err := utils.GenerateRefreshToken()
 	if err != nil {
 		return "", "", err
@@ -108,12 +113,11 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password, ip, userAg
 		IP:          ip,
 		UserAgent:   userAgent,
 	}
-	err = s.UserRepo.CreateRefreshTokenTx(ctx, tx, &rt)
+	err = qtx.CreateRefreshToken(ctx, &rt)
 	if err != nil {
 		return "", "", errors.New("failed to store refresh token")
 	}
-
-	err = s.UserRepo.EnforceMaxRefreshTokensTx(ctx, tx, user.ID, 10)
+	err = qtx.EnforceMaxRefreshTokens(ctx, user.ID, 10)
 	if err != nil {
 		return "", "", errors.New("failed to enforce max refresh sessions")
 	}
@@ -152,6 +156,8 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken, ip, userAg
 	}
 	defer tx.Rollback(ctx)
 
+	qtx := s.UserRepo.WithTx(tx)
+
 	// --- REVOKE + INSERT METHOD (For highly secure strict session tracking) ---
 	// err = s.UserRepo.RevokeRefreshTokenTx(ctx, tx, hash)
 	// if err != nil {
@@ -180,7 +186,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken, ip, userAg
 		return "", "", err
 	}
 
-	err = s.UserRepo.RotateRefreshTokenTx(ctx, tx, rt.ID, utils.HashToken(newRefresh), time.Now().Add(7*24*time.Hour), ip, userAgent)
+	err = qtx.RotateRefreshToken(ctx, rt.ID, utils.HashToken(newRefresh), time.Now().Add(7*24*time.Hour), ip, userAgent)
 	if err != nil {
 		return "", "", errors.New("failed to rotate refresh token")
 	}

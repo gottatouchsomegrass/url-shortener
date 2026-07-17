@@ -7,13 +7,33 @@ import (
 
 	"github.com/gottatouchsomegrass/url/app/models"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/redis/go-redis/v9"
 )
 
+type DBTX interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Begin(ctx context.Context) (pgx.Tx, error)
+}
+
 type UserQuery struct {
-	DB  *pgxpool.Pool
+	DB  DBTX
 	RDB *redis.Client
+}
+
+func NewUserQueries(DB DBTX) *UserQuery {
+	return &UserQuery{
+		DB: DB,
+	}
+}
+
+func (q *UserQuery) WithTx(tx pgx.Tx) *UserQuery {
+	return &UserQuery{
+		DB:  tx,    // Replace the pool with the transaction
+		RDB: q.RDB, // Keep the redis connection
+	}
 }
 
 // CreateUser inserts a new user into the database.
@@ -114,25 +134,6 @@ func (q *UserQuery) GetUserByID(
 	return &user, nil
 }
 
-// InvalidateToken invalidates a user's token.
-// (implement later for refersh tokens)
-// func (q *UserQuery) InvalidateToken(
-// 	ctx context.Context,
-// 	userID int64,
-// ) error {
-// 	query := `
-// 		DELETE FROM tokens
-// 		WHERE user_id = $1
-// 	`
-
-// 	_, err := q.DB.Exec(
-// 		ctx,
-// 		query,
-// 		userID,
-// 	)
-
-//	return err
-//
 // GetAllUsers retrieves a paginated list of all users.
 func (q *UserQuery) GetAllUsers(ctx context.Context, limit, offset int) ([]models.User, error) {
 	query := `
@@ -254,28 +255,8 @@ func (q *UserQuery) CreateRefreshToken(ctx context.Context, rt *models.RefreshTo
 	).Scan(&rt.ID, &rt.CreatedAt)
 }
 
-// CreateUserTx inserts a new user into the database within a transaction.
-func (q *UserQuery) CreateUserTx(ctx context.Context, tx pgx.Tx, user *models.User) error {
-	query := `
-		INSERT INTO users (email, password_hash)
-		VALUES ($1, $2)
-		RETURNING id, role, created_at
-	`
-	return tx.QueryRow(ctx, query, user.Email, user.PasswordHash).Scan(&user.ID, &user.Role, &user.CreatedAt)
-}
-
-// CreateRefreshTokenTx creates a new refresh token within a transaction.
-func (q *UserQuery) CreateRefreshTokenTx(ctx context.Context, tx pgx.Tx, rt *models.RefreshToken) error {
-	query := `
-		INSERT INTO refresh_tokens (user_id, refresh_hash, expires_at, ip, user_agent)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, created_at
-	`
-	return tx.QueryRow(ctx, query, rt.UserID, rt.RefreshHash, rt.ExpiresAt, rt.IP, rt.UserAgent).Scan(&rt.ID, &rt.CreatedAt)
-}
-
-// EnforceMaxRefreshTokensTx enforces a maximum number of refresh token sessions per user.
-func (q *UserQuery) EnforceMaxRefreshTokensTx(ctx context.Context, tx pgx.Tx, userID int64, max int) error {
+// EnforceMaxRefreshTokens enforces a maximum number of refresh token sessions per user.
+func (q *UserQuery) EnforceMaxRefreshTokens(ctx context.Context, userID int64, max int) error {
 	query := `
 		DELETE FROM refresh_tokens
 		WHERE id NOT IN (
@@ -285,7 +266,7 @@ func (q *UserQuery) EnforceMaxRefreshTokensTx(ctx context.Context, tx pgx.Tx, us
 			LIMIT $2
 		) AND user_id = $1
 	`
-	_, err := tx.Exec(ctx, query, userID, max)
+	_, err := q.DB.Exec(ctx, query, userID, max)
 	return err
 }
 
@@ -345,13 +326,6 @@ func (q *UserQuery) RevokeRefreshToken(ctx context.Context, hash string) error {
 	return err
 }
 
-// RevokeRefreshTokenTx revokes a refresh token within a transaction.
-func (q *UserQuery) RevokeRefreshTokenTx(ctx context.Context, tx pgx.Tx, hash string) error {
-	query := `UPDATE refresh_tokens SET revoked_at = NOW() WHERE refresh_hash = $1`
-	_, err := tx.Exec(ctx, query, hash)
-	return err
-}
-
 // DeleteRefreshToken deletes a refresh token.
 func (q *UserQuery) DeleteRefreshToken(ctx context.Context, id int64) error {
 	query := `DELETE FROM refresh_tokens WHERE id = $1`
@@ -359,9 +333,8 @@ func (q *UserQuery) DeleteRefreshToken(ctx context.Context, id int64) error {
 	return err
 }
 
-func (q *UserQuery) RotateRefreshTokenTx(
+func (q *UserQuery) RotateRefreshToken(
 	ctx context.Context,
-	tx pgx.Tx,
 	sessionID int64,
 	newHash string,
 	expiresAt time.Time,
@@ -377,7 +350,7 @@ func (q *UserQuery) RotateRefreshTokenTx(
     user_agent = $4
 	WHERE id = $5;`
 
-	cmd, err := tx.Exec(ctx, query, newHash, expiresAt, ip, userAgent, sessionID)
+	cmd, err := q.DB.Exec(ctx, query, newHash, expiresAt, ip, userAgent, sessionID)
 	if err != nil {
 		return err
 	}
