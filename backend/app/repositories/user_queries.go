@@ -326,6 +326,13 @@ func (q *UserQuery) RevokeRefreshToken(ctx context.Context, hash string) error {
 	return err
 }
 
+// RevokeAllOtherSessions revokes all sessions for a user except the specified session.
+func (q *UserQuery) RevokeAllOtherSessions(ctx context.Context, userID int64, currentSessionID int64) error {
+	query := `UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND id != $2 AND revoked_at IS NULL`
+	_, err := q.DB.Exec(ctx, query, userID, currentSessionID)
+	return err
+}
+
 // DeleteRefreshToken deletes a refresh token.
 func (q *UserQuery) DeleteRefreshToken(ctx context.Context, id int64) error {
 	query := `DELETE FROM refresh_tokens WHERE id = $1`

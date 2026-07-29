@@ -332,3 +332,32 @@ func (auc *AuthController) RevokeSession(c *gin.Context) {
 
 	c.JSON(200, models.MessageSuccess{Message: "session revoked successfully"})
 }
+
+// RevokeAllOtherSessions logs out all devices except the current one
+// @Summary      Revoke all other sessions
+// @Description  Revokes all refresh token sessions for the current user except the one making this request
+// @Tags         auth
+// @Produce      json
+// @Security     Bearer
+// @Success      200  {object}  models.MessageSuccess
+// @Failure      400  {object}  models.HTTPError
+// @Failure      500  {object}  models.HTTPError
+// @Router       /auth/sessions/others [delete]
+func (auc *AuthController) RevokeAllOtherSessions(c *gin.Context) {
+	userID := c.MustGet("userID").(int64)
+	currentSessionIDStr := c.MustGet("sessionID").(string) // from jwt claims
+	
+	currentSessionID, err := strconv.ParseInt(currentSessionIDStr, 10, 64)
+	if err != nil {
+		c.JSON(400, models.HTTPError{Error: "invalid current session ID format"})
+		return
+	}
+
+	err = auc.Service.RevokeAllOtherSessions(c.Request.Context(), userID, currentSessionID)
+	if err != nil {
+		c.JSON(500, models.HTTPError{Error: err.Error()})
+		return
+	}
+
+	c.JSON(200, models.MessageSuccess{Message: "all other sessions revoked successfully"})
+}

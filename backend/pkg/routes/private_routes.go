@@ -27,6 +27,9 @@ func PrivateRoutes(r *gin.RouterGroup,
 	// Added Rate Limit
 	auth.DELETE("/sessions/:id", middleware.RateLimiter(uc.RDB, 30, time.Minute),
 		auc.RevokeSession)
+	// Added Rate Limit
+	auth.DELETE("/sessions/others", middleware.RateLimiter(uc.RDB, 30, time.Minute),
+		auc.RevokeAllOtherSessions)
 
 	// analytics private endpoints
 	analytics := r.Group("/analytics")

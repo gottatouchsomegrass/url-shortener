@@ -1,2 +1,23 @@
+# Temporary files & Air
 tmp/
 .air/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Build & Dependencies
+node_modules/
+.next/
+dist/
+build/
+*.out
+*.exe
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store

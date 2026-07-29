@@ -15,421 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/users": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get a paginated list of all users in the system (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Get all users",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 50,
-                        "description": "Items per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.PaginatedUserResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/users/{userid}/urls": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get a paginated list of URLs belonging to a specific user (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Get URLs of a specific user",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "userid",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 50,
-                        "description": "Items per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.PaginatedURLResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/analytics/{id}/browser": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get visitor distribution stats grouped by browser type for a URL ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "analytics"
-                ],
-                "summary": "Get browser distribution analytics",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "URL ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.BrowserAnalytics"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPDetailsError"
-                        }
-                    }
-                }
-            }
-        },
-        "/analytics/{id}/daily": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get a list of dates and click counts for a URL ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "analytics"
-                ],
-                "summary": "Get daily click analytics",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "URL ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.DailyClick"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPDetailsError"
-                        }
-                    }
-                }
-            }
-        },
-        "/analytics/{id}/device": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get visitor distribution stats grouped by device type for a URL ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "analytics"
-                ],
-                "summary": "Get device distribution analytics",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "URL ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.DeviceAnalytics"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPDetailsError"
-                        }
-                    }
-                }
-            }
-        },
-        "/analytics/{id}/overview": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get click stats summary (today, this week, this month, total clicks) for a URL ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "analytics"
-                ],
-                "summary": "Get URL analytics overview",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "URL ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.AnalyticsOverview"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPDetailsError"
-                        }
-                    }
-                }
-            }
-        },
-        "/analytics/{id}/recent": {
-            "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get up to 20 recent visitor events (IP, User Agent, Referer, Browser, Device, CreatedAt) for a URL ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "analytics"
-                ],
-                "summary": "Get recent visits logs",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "URL ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.RecentVisit"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPDetailsError"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/login": {
             "post": {
                 "description": "Authenticate user and return a JWT token",
@@ -619,205 +204,26 @@ const docTemplate = `{
                 }
             }
         },
-        "/shorten": {
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Shorten a long URL, optionally with a custom code and expiry",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "urls"
-                ],
-                "summary": "Create a shortened URL",
-                "parameters": [
-                    {
-                        "description": "Shorten URL request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Request"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.URLShortenSuccess"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPValidationError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/urls": {
+        "/auth/sessions": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Get a paginated list of URLs shortened by the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Get all active refresh token sessions for the current user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "urls"
+                    "auth"
                 ],
-                "summary": "Get user's shortened URLs",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 50,
-                        "description": "Items per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
+                "summary": "Get active sessions",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.PaginatedURLResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/urls/bulk": {
-            "delete": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Delete multiple shortened URLs by their IDs",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "urls"
-                ],
-                "summary": "Bulk delete shortened URLs",
-                "parameters": [
-                    {
-                        "description": "Bulk delete request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.BulkDeleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.MessageSuccess"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPValidationError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/urls/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Update the long URL destination of an existing shortened URL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "urls"
-                ],
-                "summary": "Update a shortened URL",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "URL ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update URL request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.UpdateURLRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.MessageSuccess"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPValidationError"
+                            "$ref": "#/definitions/models.SessionListResponse"
                         }
                     },
                     "500": {
@@ -827,28 +233,64 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/auth/sessions/others": {
             "delete": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Delete a shortened URL by its ID",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Revokes all refresh token sessions for the current user except the one making this request",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "urls"
+                    "auth"
                 ],
-                "summary": "Delete a shortened URL",
+                "summary": "Revoke all other sessions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MessageSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sessions/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Revokes a specific refresh token session for the current user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Revoke a session",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "URL ID",
+                        "description": "Session ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -870,48 +312,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    }
-                }
-            }
-        },
-        "/{shortCode}": {
-            "get": {
-                "description": "Redirect a short code to its original long URL and log click analytics",
-                "tags": [
-                    "urls"
-                ],
-                "summary": "Redirect short code",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Short URL Code",
-                        "name": "shortCode",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirects to long URL"
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    },
-                    "410": {
-                        "description": "Gone",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPResponseErr"
+                            "$ref": "#/definitions/models.HTTPError"
                         }
                     }
                 }
@@ -919,21 +320,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controllers.BulkDeleteRequest": {
-            "type": "object",
-            "required": [
-                "ids"
-            ],
-            "properties": {
-                "ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
         "controllers.LoginRequest": {
             "type": "object",
             "required": [
@@ -965,51 +351,6 @@ const docTemplate = `{
                 }
             }
         },
-        "controllers.Request": {
-            "type": "object",
-            "required": [
-                "long_url"
-            ],
-            "properties": {
-                "custom_code": {
-                    "type": "string"
-                },
-                "expiry": {
-                    "type": "string"
-                },
-                "long_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "controllers.UpdateURLRequest": {
-            "type": "object",
-            "required": [
-                "long_url"
-            ],
-            "properties": {
-                "long_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.AnalyticsOverview": {
-            "type": "object",
-            "properties": {
-                "this_month": {
-                    "type": "integer"
-                },
-                "this_week": {
-                    "type": "integer"
-                },
-                "today": {
-                    "type": "integer"
-                },
-                "total_clicks": {
-                    "type": "integer"
-                }
-            }
-        },
         "models.AuthLoginSuccess": {
             "type": "object",
             "properties": {
@@ -1032,81 +373,12 @@ const docTemplate = `{
                 }
             }
         },
-        "models.BrowserAnalytics": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.DailyClick": {
-            "type": "object",
-            "properties": {
-                "clicks": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.DeviceAnalytics": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "device": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.HTTPDetailsError": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string",
-                    "example": "connection refused"
-                },
-                "error": {
-                    "type": "string",
-                    "example": "failed to fetch analytics"
-                }
-            }
-        },
         "models.HTTPError": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string",
                     "example": "invalid credentials"
-                }
-            }
-        },
-        "models.HTTPResponseErr": {
-            "type": "object",
-            "properties": {
-                "err": {
-                    "type": "string",
-                    "example": "not found"
-                }
-            }
-        },
-        "models.HTTPValidationError": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    },
-                    "example": {
-                        "long_url": "give valid URL"
-                    }
                 }
             }
         },
@@ -1119,112 +391,40 @@ const docTemplate = `{
                 }
             }
         },
-        "models.PaginatedURLResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.URL"
-                    }
-                },
-                "meta": {
-                    "$ref": "#/definitions/models.PaginationMeta"
-                }
-            }
-        },
-        "models.PaginatedUserResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.User"
-                    }
-                },
-                "meta": {
-                    "$ref": "#/definitions/models.PaginationMeta"
-                }
-            }
-        },
-        "models.PaginationMeta": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer",
-                    "example": 50
-                },
-                "page": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "total": {
-                    "type": "integer",
-                    "example": 150
-                },
-                "total_pages": {
-                    "type": "integer",
-                    "example": 3
-                }
-            }
-        },
-        "models.RecentVisit": {
+        "models.Session": {
             "type": "object",
             "properties": {
                 "browser": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string"
-                },
                 "device": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "ip_address": {
                     "type": "string"
                 },
-                "referer": {
+                "is_current_device": {
+                    "type": "boolean"
+                },
+                "last_active": {
+                    "type": "string"
+                },
+                "location": {
                     "type": "string"
                 }
             }
         },
-        "models.URL": {
-            "type": "object",
-            "required": [
-                "long_url",
-                "short_url"
-            ],
-            "properties": {
-                "clicks": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "expiry": {
-                    "type": "string"
-                },
-                "id": {
-                    "description": "go for uuid later",
-                    "type": "integer"
-                },
-                "long_url": {
-                    "type": "string"
-                },
-                "short_url": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.URLShortenSuccess": {
+        "models.SessionListResponse": {
             "type": "object",
             "properties": {
-                "success": {
-                    "type": "string",
-                    "example": "url inserted to db"
+                "sessions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Session"
+                    }
                 }
             }
         },

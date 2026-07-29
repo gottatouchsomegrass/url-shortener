@@ -261,7 +261,7 @@ func (s *AuthService) GetSessions(ctx context.Context, userID int64, currentSess
 
 func (s *AuthService) RevokeSession(ctx context.Context, sessionID int64, userID int64) error {
 	// Need to ensure the session belongs to the user
-	query := `UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1 AND user_id = $2`
+	query := `UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL`
 	cmd, err := s.UserRepo.DB.Exec(ctx, query, sessionID, userID)
 	if err != nil {
 		return err
@@ -270,4 +270,8 @@ func (s *AuthService) RevokeSession(ctx context.Context, sessionID int64, userID
 		return errors.New("session not found or not owned by user")
 	}
 	return nil
+}
+
+func (s *AuthService) RevokeAllOtherSessions(ctx context.Context, userID int64, currentSessionID int64) error {
+	return s.UserRepo.RevokeAllOtherSessions(ctx, userID, currentSessionID)
 }
