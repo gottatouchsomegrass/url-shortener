@@ -15,6 +15,7 @@ type HTTPDetailsError struct {
 	Error   string `json:"error" example:"failed to fetch analytics"`
 	Details string `json:"details" example:"connection refused"`
 }
+
 // HTTPResponseErr represents an error response keyed under 'err'
 type HTTPResponseErr struct {
 	Err string `json:"err" example:"not found"`

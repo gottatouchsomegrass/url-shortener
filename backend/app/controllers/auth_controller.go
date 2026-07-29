@@ -105,7 +105,7 @@ func (auc *AuthController) Login(c *gin.Context) {
 			c.JSON(429, models.HTTPError{Error: "Too many login attempts. Please try again in 15 minutes."})
 			return
 		}
-		
+
 		// In a real app, map errors to correct status codes (401 vs 500)
 		if err.Error() == "invalid credentials" {
 			c.JSON(401, models.HTTPError{Error: err.Error()})
@@ -292,7 +292,7 @@ func (auc *AuthController) GetSessions(c *gin.Context) {
 		ua := user_agent.New(session.Browser)
 		browserName, browserVersion := ua.Browser()
 		os := ua.OS()
-		
+
 		res.Sessions[i].Browser = browserName + " " + browserVersion
 		res.Sessions[i].Device = os
 		if ua.Mobile() {
@@ -316,7 +316,7 @@ func (auc *AuthController) GetSessions(c *gin.Context) {
 // @Router       /auth/sessions/{id} [delete]
 func (auc *AuthController) RevokeSession(c *gin.Context) {
 	userID := c.MustGet("userID").(int64)
-	
+
 	sessionIDStr := c.Param("id")
 	sessionID, err := strconv.ParseInt(sessionIDStr, 10, 64)
 	if err != nil {
@@ -346,7 +346,7 @@ func (auc *AuthController) RevokeSession(c *gin.Context) {
 func (auc *AuthController) RevokeAllOtherSessions(c *gin.Context) {
 	userID := c.MustGet("userID").(int64)
 	currentSessionIDStr := c.MustGet("sessionID").(string) // from jwt claims
-	
+
 	currentSessionID, err := strconv.ParseInt(currentSessionIDStr, 10, 64)
 	if err != nil {
 		c.JSON(400, models.HTTPError{Error: "invalid current session ID format"})

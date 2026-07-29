@@ -2,7 +2,7 @@ package models
 
 // AuthRegisterSuccess represents the success response for user registration
 type AuthRegisterSuccess struct {
-	Token   string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
 // AuthLoginSuccess represents the success response for user login

@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gottatouchsomegrass/url/app/controllers"
+	"github.com/gottatouchsomegrass/url/app/services"
 	_ "github.com/gottatouchsomegrass/url/docs"
 	"github.com/gottatouchsomegrass/url/pkg/configs"
 	"github.com/gottatouchsomegrass/url/pkg/middleware"
-	"github.com/gottatouchsomegrass/url/app/services"
 	"github.com/gottatouchsomegrass/url/pkg/routes"
 	"github.com/gottatouchsomegrass/url/pkg/utils"
 	"github.com/gottatouchsomegrass/url/platform/database"
